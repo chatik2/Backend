@@ -12,6 +12,16 @@ public class User {
 
     private String name;
 
+    private Long secondId;
+
+    public Long getSecondId() {
+        return secondId;
+    }
+
+    public void setSecondId(Long secondId) {
+        this.secondId = secondId;
+    }
+
     public Long getId() {
         return id;
     }
