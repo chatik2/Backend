@@ -35,19 +35,10 @@ public class MainController {
     @Autowired
     MessageService messageService;
 
-    @RequestMapping(value = "/new_user")
+    @RequestMapping(value = "/new_user", produces={"application/json; charset=UTF-8"})
     ResponseEntity<User> getNewUser(
-            /*@RequestHeader(value = "uid", required = false) Long userId,
-            @RequestHeader(value = "type", required = false) String type,
-            @RequestParam(value = "name", required = false) String userName*/
     ) {
-        /*HttpHeaders responseHeaders = new HttpHeaders();
-        responseHeaders.set("Access-Control-Allow-Origin", "*");
-        responseHeaders.set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, DELETE");
-        responseHeaders.set("Access-Control-Max-Age", "3600");
-        responseHeaders.set("Access-Control-Allow-Headers", "x-requested-with");*/
 
-        // List<Message> result = messageRepository.findAll();
         List<User> userResult = userRepository.findAll();
 
         User user = new User();
@@ -56,6 +47,17 @@ public class MainController {
         boolean uniqueName = false;
         while (!uniqueName) {
             String randomName = "anonim" + String.valueOf(random.nextInt(89999) + 10000);
+
+            if(userResult.size() == 0){
+                Integer randomSecondId = random.nextInt(89999) + 10000;
+                user.setSecondId(new Long(randomSecondId));
+                user.setName(randomName);
+                user.setLastActivityDate(new Date());
+                user.setLastRequestDate(new Date());
+                userRepository.save(user);
+                return new ResponseEntity<>(user, HttpStatus.OK);
+            }
+
             for (User u : userResult) {
                 if (u.getName().equals(randomName)) {
                     uniqueName = false;
@@ -77,25 +79,21 @@ public class MainController {
                 }
             }
             user.setSecondId(new Long(randomSecondId));
+            user.setLastActivityDate(new Date());
+            user.setLastRequestDate(new Date());
         }
 
         userRepository.save(user);
-        //responseHeaders.set("number_of_msgs", Integer.toString(result.size()));
-        return new ResponseEntity<>(user, /*responseHeaders, */HttpStatus.OK);
+        return new ResponseEntity<>(user, HttpStatus.OK);
     }
 
-    @PostMapping("/new_name")
+    @PostMapping(value = "/new_name", produces={"application/json; charset=UTF-8"})
     ResponseEntity<User> setUserName(
             @RequestHeader(value = "uid", required = false) long userId,
             //@RequestParam(value = "uid", required = false) long userId,
             @RequestHeader(value = "type", required = false) String type,
             @RequestBody String userName
     ) {
-        /*HttpHeaders responseHeaders = new HttpHeaders();
-        responseHeaders.set("Access-Control-Allow-Origin", "*");
-        responseHeaders.set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, DELETE");
-        responseHeaders.set("Access-Control-Max-Age", "3600");
-        responseHeaders.set("Access-Control-Allow-Headers", "x-requested-with");*/
 
         List<User> userResult = userRepository.findAll();
         boolean userExists = false;
@@ -110,110 +108,92 @@ public class MainController {
 
         User user = userRepository.findById(userId);
         user.setName(userName);
+        user.setLastActivityDate(new Date());
         userRepository.save(user);
 
         return new ResponseEntity<>(user, /*responseHeaders,*/ HttpStatus.OK);
 
     }
 
-    @RequestMapping(value = "/users")
+    @RequestMapping(value = "/users", produces={"application/json; charset=UTF-8"})
     ResponseEntity<List<UserDTO>> getUsers(
             @RequestHeader(value = "uid", required = false) Long userId,
             //@RequestParam(value = "uid", required = false) Long userId,
+            //@RequestParam(value = "type", required = false) String type
             @RequestHeader(value = "type", required = false) String type
     ) {
 
-        /*HttpHeaders responseHeaders = new HttpHeaders();
-        responseHeaders.set("Access-Control-Allow-Origin", "*");
-        responseHeaders.set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, DELETE");
-        responseHeaders.set("Access-Control-Max-Age", "3600");
-        responseHeaders.set("Access-Control-Allow-Headers", "x-requested-with");*/
-
         List<User> userResult = userRepository.findAll();
-        /*boolean userExists = false;
+
+        boolean userExists = false;
         for (User u : userResult) {
             if (u.getId().equals(userId)) {
                 userExists = true;
             }
         }
         if (!userExists) {
-            return new ResponseEntity<>(*//*responseHeaders,*//* HttpStatus.OK);
-        }*/
+            return new ResponseEntity<>(HttpStatus.OK);
+        }
+        long uid = userId;
+        User user = userRepository.findById(uid);
+
+
+        if(type != null && type.equals("mobile")){
+            List<UserDTO> userDTOResult = userService.getLastRequestUsers(userId);
+           /* if(userDTOResult.size()==0){
+                MainController.returnNull();
+            }*/
+            user.setLastRequestDate(new Date());
+            userRepository.save(user);
+            return new ResponseEntity<>(userDTOResult, HttpStatus.OK);
+        }
 
         List<UserDTO> userDTOResult = userService.getDTOUsers();
 
+        user.setLastRequestDate(new Date());
+        userRepository.save(user);
 
-        return new ResponseEntity<>(userDTOResult, /*responseHeaders,*/ HttpStatus.OK);
+        return new ResponseEntity<>(userDTOResult, HttpStatus.OK);
     }
 
-    @RequestMapping(value = "/msgs")
+    @RequestMapping(value = "/msgs", produces={"application/json; charset=UTF-8"})
     ResponseEntity<List<MessageDTO>> getMessages(
-            @RequestHeader(value = "uid", required = false) Long userId,
+           @RequestHeader(value = "uid", required = false) Long userId,
             //@RequestParam(value = "uid", required = false) Long userId,
             @RequestHeader(value = "type", required = false) String type
     ) {
-
-        /*HttpHeaders responseHeaders = new HttpHeaders();
-        responseHeaders.set("Access-Control-Allow-Origin", "*");
-        responseHeaders.set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, DELETE");
-        responseHeaders.set("Access-Control-Max-Age", "3600");
-        responseHeaders.set("Access-Control-Allow-Headers", "x-requested-with");*/
-
-        //List<Message> messageResult = messageRepository.findAll();
-        List<User> userResult = userRepository.findAll();
-        /*boolean userExists = false;
-        for (User u : userResult) {
-            if (u.getId().equals(userId)) {
-                userExists = true;
-            }
-        }
-        if (!userExists) {
-            return new ResponseEntity<>(*//*responseHeaders,*//* HttpStatus.OK);
-        }*/
-
-        List<MessageDTO> messageDTOList = messageService.getDTOMessages();
-
-        return new ResponseEntity<>(messageDTOList, /*responseHeaders,*/ HttpStatus.OK);
-    }
-
-    /*@RequestMapping("/new_msg")
-    ResponseEntity<Message> saveMessage(
-            //@RequestHeader(value = "uid", required = false) long userId,
-           // @RequestHeader(value = "type", required = false) String type,
-            @RequestParam(value = "text", required = false) String text
-           ,@RequestParam(value = "uid", required = false) long userId
-    ) {
-
-        HttpHeaders responseHeaders = new HttpHeaders();
-
-        responseHeaders.set("Access-Control-Allow-Origin", "*");
-        responseHeaders.set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, DELETE");
-        responseHeaders.set("Access-Control-Max-Age", "3600");
-        responseHeaders.set("Access-Control-Allow-Headers", "x-requested-with");
 
         List<User> userResult = userRepository.findAll();
         boolean userExists = false;
         for (User u : userResult) {
-            if (u.getId() == userId) {
+            if (u.getId().equals(userId)) {
                 userExists = true;
             }
         }
         if (!userExists) {
-            return new ResponseEntity<>(responseHeaders, HttpStatus.OK);
+            return new ResponseEntity<>(HttpStatus.OK);
         }
-        Message message = new Message();
-        message.setText(text);
-        Date date = new Date();
-        message.setDate(date);
-        message.setAuthor(userRepository.findById(userId));
 
-        messageRepository.save(message);
+        long uid = userId;
+        User user = userRepository.findById(uid);
 
-        //Message savedMessage = messageRepository.findByDate(date);
-        return new ResponseEntity<>(message, responseHeaders, HttpStatus.OK);
-    }*/
 
-    @RequestMapping("/new_msg")
+        if(type != null && type.equals("mobile")){
+            List<MessageDTO> messageDTOResult = messageService.getLastMessages(userId);
+            user.setLastRequestDate(new Date());
+            userRepository.save(user);
+            return new ResponseEntity<>(messageDTOResult, HttpStatus.OK);
+        }
+
+        List<MessageDTO> messageDTOList = messageService.getDTOMessages();
+
+        user.setLastRequestDate(new Date());
+        userRepository.save(user);
+
+        return new ResponseEntity<>(messageDTOList, HttpStatus.OK);
+    }
+
+    @RequestMapping(value = "/new_msg", produces={"application/json; charset=UTF-8"})
     ResponseEntity<Message> saveMessage(
             @RequestHeader(value = "uid", required = false) long userId,
            // @RequestHeader(value = "type", required = false) String type,
@@ -221,12 +201,6 @@ public class MainController {
            //,@RequestParam(value = "uid", required = false) long userId
     ) {
 
-       /* HttpHeaders responseHeaders = new HttpHeaders();
-        responseHeaders.set("Access-Control-Allow-Origin", "*");
-        responseHeaders.set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, DELETE");
-        responseHeaders.set("Access-Control-Max-Age", "3600");
-        responseHeaders.set("Access-Control-Allow-Headers", "x-requested-with");*/
-
         List<User> userResult = userRepository.findAll();
         boolean userExists = false;
         for (User u : userResult) {
@@ -235,7 +209,7 @@ public class MainController {
             }
         }
         if (!userExists) {
-            return new ResponseEntity<>(/*responseHeaders,*/ HttpStatus.OK);
+            return new ResponseEntity<>(HttpStatus.OK);
         }
         Message message = new Message();
         message.setText(text);
@@ -245,8 +219,50 @@ public class MainController {
 
         messageRepository.save(message);
 
-        //Message savedMessage = messageRepository.findByDate(date);
-        return new ResponseEntity<>(message, /*responseHeaders,*/ HttpStatus.OK);
+        return new ResponseEntity<>(message, HttpStatus.OK);
+    }
+
+   /* @RequestMapping(value = "/returnnull", produces={"application/json; charset=UTF-8"})
+    static ResponseEntity<String> returnNull(){
+
+        return new ResponseEntity<>("gg", HttpStatus.OK);
+    }*/
+
+    @RequestMapping(value = "/allusers", produces={"application/json; charset=UTF-8"})
+    ResponseEntity<List<UserDTO>> getAllUsers(
+            //@RequestHeader(value = "uid", required = false) Long userId,
+            @RequestParam(value = "uid", required = false) Long userId,
+            @RequestHeader(value = "type", required = false) String type
+    ) {
+
+        List<User> userResult = userRepository.findAll();
+
+        boolean userExists = false;
+        for (User u : userResult) {
+            if (u.getId().equals(userId)) {
+                userExists = true;
+            }
+        }
+        if (!userExists) {
+            return new ResponseEntity<>(HttpStatus.OK);
+        }
+        long uid = userId;
+        User user = userRepository.findById(uid);
+
+
+        if(type != null && type.equals("mobile")){
+            List<UserDTO> userDTOResult = userService.getLastRequestUsers(userId);
+            user.setLastRequestDate(new Date());
+            userRepository.save(user);
+            return new ResponseEntity<>(userDTOResult, HttpStatus.OK);
+        }
+
+        List<UserDTO> userDTOResult = userService.getDTOUsers();
+
+        user.setLastRequestDate(new Date());
+        userRepository.save(user);
+
+        return new ResponseEntity<>(userDTOResult, HttpStatus.OK);
     }
 
 

@@ -16,6 +16,9 @@ public class MessageService {
     @Autowired
     MessageRepository messageRepository;
 
+    @Autowired
+    UserRepository userRepository;
+
     public List<MessageDTO> getDTOMessages(){
         List<Message> messageResult = messageRepository.findAll();
         List<MessageDTO> messageDTOList = new ArrayList<>();
@@ -28,5 +31,28 @@ public class MessageService {
             messageDTOList.add(messageDTO);
         }
         return messageDTOList;
+    }
+
+    public List<MessageDTO> getLastMessages(Long id){
+        long uid = id;
+        User user = userRepository.findById(uid);
+        List<Message> messageResult = messageRepository.findAll();
+        List<Message> lastMessageResult = new ArrayList<>();
+        for (Message m : messageResult) {
+            if(user.getLastActivityDate().before(m.getDate())){
+                lastMessageResult.add(m);
+            }
+        }
+
+        List<MessageDTO> lastMessagesDTOList = new ArrayList<>();
+        for (Message m : lastMessageResult) {
+            MessageDTO messageDTO = new MessageDTO();
+            messageDTO.setId(m.getId());
+            messageDTO.setText(m.getText());
+            messageDTO.setDate(m.getDate());
+            messageDTO.setSecondUserId(m.getAuthor().getSecondId());
+            lastMessagesDTOList.add(messageDTO);
+        }
+        return lastMessagesDTOList;
     }
 }

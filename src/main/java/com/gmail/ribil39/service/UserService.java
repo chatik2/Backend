@@ -25,4 +25,28 @@ public class UserService {
         }
         return userDTOList;
     }
+
+    public List<UserDTO> getLastRequestUsers(Long id){
+        long uid = id;
+        User user = userRepository.findById(uid);
+        List<User> userResult = userRepository.findAll();
+        List<User> lastActivityUserResult = new ArrayList<>();
+        for (User u : userResult) {
+
+            if(user.getLastRequestDate().before(u.getLastRequestDate()) ||
+                    user.getLastRequestDate().before(u.getLastActivityDate())){
+                lastActivityUserResult.add(u);
+            }
+        }
+
+        List<UserDTO> lastActivityUserDTOList = new ArrayList<>();
+        for (User u : lastActivityUserResult) {
+            UserDTO userDTO = new UserDTO();
+            userDTO.setId(u.getSecondId());
+            userDTO.setName(u.getName());
+            lastActivityUserDTOList.add(userDTO);
+        }
+
+        return lastActivityUserDTOList;
+    }
 }
