@@ -26,6 +26,11 @@ public class TestController {
         return "test";
     }
 
+    @GetMapping(value = "/")
+    String index(){
+        return "index";
+    }
+
     @PostMapping("/savemessage")
     String saveMessage(
             @RequestParam(value = "uid", required = false) long userId,
@@ -41,3 +46,4 @@ public class TestController {
         return "redirect:/";
     }
 }
+

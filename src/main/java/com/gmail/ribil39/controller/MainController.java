@@ -35,6 +35,8 @@ public class MainController {
     @Autowired
     MessageService messageService;
 
+    public static final long HOUR = 3600*1000; // in milli-seconds
+
     @RequestMapping(value = "/new_user", produces={"application/json; charset=UTF-8"})
     ResponseEntity<User> getNewUser(
     ) {
@@ -52,8 +54,9 @@ public class MainController {
                 Integer randomSecondId = random.nextInt(89999) + 10000;
                 user.setSecondId(new Long(randomSecondId));
                 user.setName(randomName);
-                user.setLastActivityDate(new Date());
-                user.setLastRequestDate(new Date());
+
+                user.setLastActivityDate(new Date(new Date().getTime() + 3 * HOUR));
+                user.setLastRequestDate(new Date(new Date().getTime() + 3 * HOUR));
                 userRepository.save(user);
                 return new ResponseEntity<>(user, HttpStatus.OK);
             }
@@ -79,8 +82,8 @@ public class MainController {
                 }
             }
             user.setSecondId(new Long(randomSecondId));
-            user.setLastActivityDate(new Date());
-            user.setLastRequestDate(new Date());
+            user.setLastActivityDate(new Date(new Date().getTime() + 3 * HOUR));
+            user.setLastRequestDate(new Date(new Date().getTime() + 3 * HOUR));
         }
 
         userRepository.save(user);
@@ -107,8 +110,15 @@ public class MainController {
         }
 
         User user = userRepository.findById(userId);
+
+        Message message = new Message();
+        message.setDate(new Date(new Date().getTime() + 3 * HOUR));
+        message.setAuthor(user);
+        message.setText("User " + user.getName() + " changed name to " + userName);
+        messageRepository.save(message);
+
         user.setName(userName);
-        user.setLastActivityDate(new Date());
+        user.setLastActivityDate(new Date(new Date().getTime() + 3 * HOUR));
         userRepository.save(user);
 
         return new ResponseEntity<>(user, /*responseHeaders,*/ HttpStatus.OK);
@@ -143,14 +153,14 @@ public class MainController {
            /* if(userDTOResult.size()==0){
                 MainController.returnNull();
             }*/
-            user.setLastRequestDate(new Date());
+            user.setLastRequestDate(new Date(new Date().getTime() + 3 * HOUR));
             userRepository.save(user);
             return new ResponseEntity<>(userDTOResult, HttpStatus.OK);
         }
 
         List<UserDTO> userDTOResult = userService.getDTOUsers();
 
-        user.setLastRequestDate(new Date());
+        user.setLastRequestDate(new Date(new Date().getTime() + 3 * HOUR));
         userRepository.save(user);
 
         return new ResponseEntity<>(userDTOResult, HttpStatus.OK);
@@ -177,17 +187,16 @@ public class MainController {
         long uid = userId;
         User user = userRepository.findById(uid);
 
-
         if(type != null && type.equals("mobile")){
             List<MessageDTO> messageDTOResult = messageService.getLastMessages(userId);
-            user.setLastRequestDate(new Date());
+            user.setLastRequestDate(new Date(new Date().getTime() + 3 * HOUR));
             userRepository.save(user);
             return new ResponseEntity<>(messageDTOResult, HttpStatus.OK);
         }
 
         List<MessageDTO> messageDTOList = messageService.getDTOMessages();
 
-        user.setLastRequestDate(new Date());
+        user.setLastRequestDate(new Date(new Date().getTime() + 3 * HOUR));
         userRepository.save(user);
 
         return new ResponseEntity<>(messageDTOList, HttpStatus.OK);
@@ -213,8 +222,8 @@ public class MainController {
         }
         Message message = new Message();
         message.setText(text);
-        Date date = new Date();
-        message.setDate(date);
+
+        message.setDate(new Date(new Date().getTime() + 3 * HOUR));
         message.setAuthor(userRepository.findById(userId));
 
         messageRepository.save(message);
@@ -252,17 +261,82 @@ public class MainController {
 
         if(type != null && type.equals("mobile")){
             List<UserDTO> userDTOResult = userService.getLastRequestUsers(userId);
-            user.setLastRequestDate(new Date());
+            user.setLastRequestDate(new Date(new Date().getTime() + 3 * HOUR));
             userRepository.save(user);
             return new ResponseEntity<>(userDTOResult, HttpStatus.OK);
         }
 
         List<UserDTO> userDTOResult = userService.getDTOUsers();
 
-        user.setLastRequestDate(new Date());
+        user.setLastRequestDate(new Date(new Date().getTime() + 3 * HOUR));
         userRepository.save(user);
 
         return new ResponseEntity<>(userDTOResult, HttpStatus.OK);
+    }
+
+    @RequestMapping(value = "/allmsgs", produces={"application/json; charset=UTF-8"})
+    ResponseEntity<List<MessageDTO>> getAllMessages(
+            //@RequestHeader(value = "uid", required = false) Long userId,
+            @RequestParam(value = "uid", required = false) Long userId,
+            @RequestHeader(value = "type", required = false) String type
+    ) {
+
+        List<User> userResult = userRepository.findAll();
+        boolean userExists = false;
+        for (User u : userResult) {
+            if (u.getId().equals(userId)) {
+                userExists = true;
+            }
+        }
+        if (!userExists) {
+            return new ResponseEntity<>(HttpStatus.OK);
+        }
+
+        long uid = userId;
+        User user = userRepository.findById(uid);
+
+
+        if(type != null && type.equals("mobile")){
+            List<MessageDTO> messageDTOResult = messageService.getLastMessages(userId);
+            user.setLastRequestDate(new Date(new Date().getTime() + 3 * HOUR));
+            userRepository.save(user);
+            return new ResponseEntity<>(messageDTOResult, HttpStatus.OK);
+        }
+
+        List<MessageDTO> messageDTOList = messageService.getDTOMessages();
+
+        user.setLastRequestDate(new Date(new Date().getTime() + 3 * HOUR));
+        userRepository.save(user);
+
+        return new ResponseEntity<>(messageDTOList, HttpStatus.OK);
+    }
+
+    @RequestMapping(value = "/new", produces={"application/json; charset=UTF-8"})
+    ResponseEntity<Message> newMessage(
+
+            @RequestParam(value = "uid", required = false) long userId,
+            @RequestParam(value = "text", required = false) String text
+    ) {
+
+        List<User> userResult = userRepository.findAll();
+        boolean userExists = false;
+        for (User u : userResult) {
+            if (u.getId() == userId) {
+                userExists = true;
+            }
+        }
+        if (!userExists) {
+            return new ResponseEntity<>(HttpStatus.OK);
+        }
+        Message message = new Message();
+        message.setText(text);
+
+        message.setDate(new Date(new Date().getTime() + 3 * HOUR));
+        message.setAuthor(userRepository.findById(userId));
+
+        messageRepository.save(message);
+
+        return new ResponseEntity<>(message, HttpStatus.OK);
     }
 
 
