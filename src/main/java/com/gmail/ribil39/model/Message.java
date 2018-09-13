@@ -1,13 +1,11 @@
 package com.gmail.ribil39.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-
 import javax.persistence.*;
 import java.util.Date;
+import java.util.Objects;
 
 @Entity
 @Table(name = "messages")
-//@JsonIgnoreProperties(ignoreUnknown=true)
 public class Message {
 
     @Id
@@ -18,7 +16,7 @@ public class Message {
 
     private Date date;
 
-    @ManyToOne(fetch = FetchType.EAGER) // поставить Lazy, добавить в User
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "user_id")
     private User author;
 
@@ -53,4 +51,23 @@ public class Message {
     public void setAuthor(User author) {
         this.author = author;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Message message = (Message) o;
+        return Objects.equals(id, message.id) &&
+                Objects.equals(text, message.text) &&
+                Objects.equals(date, message.date) &&
+                Objects.equals(author, message.author);
+    }
+
+    @Override
+    public int hashCode() {
+
+        return Objects.hash(id, text, date, author);
+    }
+
+
 }

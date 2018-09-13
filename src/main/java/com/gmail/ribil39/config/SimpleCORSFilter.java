@@ -20,8 +20,6 @@ public class SimpleCORSFilter implements Filter {
         response.setHeader("Access-Control-Max-Age", "3600");
         response.setHeader("Access-Control-Allow-Headers", "x-requested-with");
         response.setHeader("Access-Control-Allow-Headers", "type, uid, content-type");
-        //response.setContentType("application/json;charset=utf-8");
-        //response.setHeader("Content-Type", "text/html; charset=utf-8");
 
         chain.doFilter(req, res);
     }
@@ -30,5 +28,3 @@ public class SimpleCORSFilter implements Filter {
     public void destroy() {}
 
 }
-
-    /*SELECT CONCAT(  'ALTER TABLE `', t.`TABLE_SCHEMA` ,  '`.`', t.`TABLE_NAME` ,  '` CONVERT TO CHARACTER SET utf8 COLLATE utf8_general_ci;' ) AS sqlcode FROM  `information_schema`.`TABLES` t WHERE 1 AND t.`TABLE_SCHEMA` = 'chatik' ORDER BY 1 LIMIT 0 , 90;*/
